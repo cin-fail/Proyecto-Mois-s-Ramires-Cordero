@@ -25,3 +25,5 @@ sf::Vector2f Board::cellCenter(int r, int c) {
     return sf::Vector2f(BOARD_OFFSET_X_LOCAL + c * CELL_SIZE_LOCAL2 + CELL_SIZE_LOCAL2 / 2.f,
         BOARD_OFFSET_Y_LOCAL + r * CELL_SIZE_LOCAL2 + CELL_SIZE_LOCAL2 / 2.f);
 }
+
+//Probandi shit
