@@ -27,9 +27,7 @@ int showEndPopup(const std::string& title, const std::string& message, sf::Font&
             }
         }
         sf::Texture fondo3;
-        if (!fondo3.loadFromFile("Project/FONDO3.jpg")) {
-            std::cerr << "Error al cargar la textura de fondo" << std::endl;
-        }
+        fondo3.loadFromFile("Project/FONDO3.jpg");
 
         sf::Sprite spriteFondo;
         spriteFondo.setTexture(fondo3);
@@ -49,10 +47,6 @@ int main() {
     sf::Font font;
     bool fontOK = false;
     if (font.loadFromFile("C:\\Windows\\Fonts\\times.ttf")) fontOK = true;
-    else if (font.loadFromFile("C:\\Windows\\Fonts\\timesnewroman.ttf")) fontOK = true;
-    else if (font.loadFromFile("C:\\Windows\\Fonts\\arial.ttf")) fontOK = true;
-    else if (font.loadFromFile("resources/times.ttf")) fontOK = true;
-    if (!fontOK) std::cerr << "Aviso: no se pudo cargar Times/Arial; botones mostrarán pero sin fuente.\n";
 
     Button bStart, bExit;
     bStart.setPosition(320.f, 240.f);
@@ -87,13 +81,11 @@ int main() {
 
         if (!window.isOpen()) break;
 
-        sf::Texture fondo;
-        if (!fondo.loadFromFile("Project/FONDO1.jpg")) {
-            std::cerr << "Error al cargar la textura de fondo" << std::endl;
-        }
+        sf::Texture fondo1;
+        fondo1.loadFromFile("Project/FONDO1.jpg");
 
         sf::Sprite spriteFondo;
-        spriteFondo.setTexture(fondo);
+        spriteFondo.setTexture(fondo1);
         window.draw(spriteFondo);
 
         if (fontOK) {
@@ -122,9 +114,7 @@ int main() {
     game.seedRand();
 
     sf::Texture backgroundTexture;
-    if (!backgroundTexture.loadFromFile("Project/FONDO2.jpg")) {
-        std::cerr << "No se pudo cargar la imagen de fondo\n";
-    }
+    backgroundTexture.loadFromFile("Project/FONDO2.jpg");
     sf::Sprite backgroundSprite;
     backgroundSprite.setTexture(backgroundTexture);
 

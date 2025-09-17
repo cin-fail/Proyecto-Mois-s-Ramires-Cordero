@@ -26,7 +26,7 @@ const int SCORE_MATCH_L = 200;
 
 
 Game::Game()
-    : score(0), movesLeft(40), target(5000),
+    : score(0), movesLeft(20), target(5000),
     selected(false), selR(-1), selC(-1),
     animating(false), swapPhase(0),
     pendingA_r(-1), pendingA_c(-1), pendingB_r(-1), pendingB_c(-1),
