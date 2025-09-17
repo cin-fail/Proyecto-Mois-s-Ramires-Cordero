@@ -1,6 +1,6 @@
 #include "Gema.h"
 
-static const float CELL_SIZE_LOCAL = 56.f; // usado para inicializar círculo (coincide con CONFIG en main)
+static const float CELL_SIZE_LOCAL = 56.f;
 static float lerp_f(float a, float b, float t) { return a + (b - a) * t; }
 
 Gem::Gem()
@@ -13,7 +13,6 @@ Gem::Gem()
 
 void Gem::init(int t, int r, int c) {
     type = t; gridR = r; gridC = c;
-    // Posición por defecto (main define offsets). Estos valores son actualizados por Game inmediatamente.
     x = tx = 0.f; y = ty = 0.f;
     moving = false; animTime = 0.f;
     updateColor();
@@ -50,6 +49,25 @@ void Gem::updateColor() {
 
 void Gem::setTarget(float nx, float ny, float dur) {
     tx = nx; ty = ny; animTime = 0.f; animDuration = dur; moving = true;
+}
+
+void Gem::setPositionImmediate(float nx, float ny) {
+    x = tx = nx;
+    y = ty = ny;
+    moving = false;
+    circle.setPosition(x, y);
+    if (hasTexture) sprite.setPosition(x, y);
+}
+
+void Gem::forceSetType(int t, const sf::Texture* tex) {
+    type = t;
+    if (tex) {
+        setTexture(*tex);
+    }
+    else {
+        clearTexture();
+        updateColor();
+    }
 }
 
 void Gem::update(float dt) {

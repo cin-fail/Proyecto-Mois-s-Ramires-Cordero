@@ -4,8 +4,7 @@
 #include "Botón.h"
 
 int showEndPopup(const std::string& title, const std::string& message, sf::Font& font) {
-    // 0 = salir, 1 = reiniciar
-    sf::RenderWindow popup(sf::VideoMode(360, 200), title, sf::Style::Close);
+    sf::RenderWindow popup(sf::VideoMode(400, 200), title, sf::Style::Close);
     popup.setFramerateLimit(60);
     sf::Text txt(message, font, 20);
     sf::FloatRect tb = txt.getLocalBounds();
@@ -13,8 +12,8 @@ int showEndPopup(const std::string& title, const std::string& message, sf::Font&
     txt.setPosition(180.f, 60.f);
     Button bQuit, bRestart;
     bQuit.setPosition(60.f, 120.f);
+    bQuit.setText("Salir", font, 14);
     bRestart.setPosition(200.f, 120.f);
-    bQuit.setText("Salir", font);
     bRestart.setText("Jugar de nuevo", font, 14);
 
     while (popup.isOpen()) {
@@ -27,7 +26,14 @@ int showEndPopup(const std::string& title, const std::string& message, sf::Font&
                 if (bRestart.contains(mp)) { popup.close(); return 1; }
             }
         }
-        popup.clear(sf::Color(50, 50, 50));
+        sf::Texture fondo3;
+        if (!fondo3.loadFromFile("Project/FONDO3.jpg")) {
+            std::cerr << "Error al cargar la textura de fondo" << std::endl;
+        }
+
+        sf::Sprite spriteFondo;
+        spriteFondo.setTexture(fondo3);
+        popup.draw(spriteFondo);
         popup.draw(txt);
         bQuit.draw(popup);
         bRestart.draw(popup);
@@ -37,14 +43,91 @@ int showEndPopup(const std::string& title, const std::string& message, sf::Font&
 }
 
 int main() {
-    // ventana principal 800x600
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Candy OOP - 8x8", sf::Style::Close);
+    sf::RenderWindow window(sf::VideoMode(800, 600), "Proyecto Moisés", sf::Style::Close);
     window.setFramerateLimit(60);
+
+    sf::Font font;
+    bool fontOK = false;
+    if (font.loadFromFile("C:\\Windows\\Fonts\\times.ttf")) fontOK = true;
+    else if (font.loadFromFile("C:\\Windows\\Fonts\\timesnewroman.ttf")) fontOK = true;
+    else if (font.loadFromFile("C:\\Windows\\Fonts\\arial.ttf")) fontOK = true;
+    else if (font.loadFromFile("resources/times.ttf")) fontOK = true;
+    if (!fontOK) std::cerr << "Aviso: no se pudo cargar Times/Arial; botones mostrarán pero sin fuente.\n";
+
+    Button bStart, bExit;
+    bStart.setPosition(320.f, 240.f);
+    bExit.setPosition(320.f, 320.f);
+    if (fontOK) {
+        bStart.setFillColor(sf::Color(50, 80, 120, 100));
+        bStart.setTextColor(sf::Color(230, 230, 230));
+        bStart.setText("Iniciar juego", font, 20);
+
+        bExit.setFillColor(sf::Color(180, 140, 80, 180));
+        bExit.setTextColor(sf::Color(255, 255, 220));
+        bExit.setText("Salir", font, 20);
+    }
+
+    bool startPressed = false;
+    while (window.isOpen() && !startPressed) {
+        sf::Event e;
+        while (window.pollEvent(e)) {
+            if (e.type == sf::Event::Closed) { window.close(); break; }
+            if (e.type == sf::Event::MouseButtonPressed && e.mouseButton.button == sf::Mouse::Left) {
+                sf::Vector2f mp = window.mapPixelToCoords({ e.mouseButton.x, e.mouseButton.y });
+                if (bStart.contains(mp)) {
+                    startPressed = true;
+                    break;
+                }
+                if (bExit.contains(mp)) {
+                    window.close();
+                    break;
+                }
+            }
+        }
+
+        if (!window.isOpen()) break;
+
+        sf::Texture fondo;
+        if (!fondo.loadFromFile("Project/FONDO1.jpg")) {
+            std::cerr << "Error al cargar la textura de fondo" << std::endl;
+        }
+
+        sf::Sprite spriteFondo;
+        spriteFondo.setTexture(fondo);
+        window.draw(spriteFondo);
+
+        if (fontOK) {
+            sf::Text title("Horror Match-3", font, 40);
+            title.setFillColor(sf::Color::White);
+            sf::FloatRect tb = title.getLocalBounds();
+            title.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
+            title.setPosition(400.f, 120.f);
+            window.draw(title);
+
+            sf::Text subtitle("Un juego con temática de terror.", font, 19);
+            subtitle.setFillColor(sf::Color(200, 200, 200));
+            sf::FloatRect sb = subtitle.getLocalBounds();
+            subtitle.setOrigin(sb.left + sb.width / 2.f, sb.top + sb.height / 2.f);
+            subtitle.setPosition(400.f, 170.f);
+            window.draw(subtitle);
+        }
+        bStart.draw(window);
+        bExit.draw(window);
+        window.display();
+    }
+
+    if (!window.isOpen()) return 0;
 
     Game game;
     game.seedRand();
 
-    // cargar texturas (opcional) y fuente
+    sf::Texture backgroundTexture;
+    if (!backgroundTexture.loadFromFile("Project/FONDO2.jpg")) {
+        std::cerr << "No se pudo cargar la imagen de fondo\n";
+    }
+    sf::Sprite backgroundSprite;
+    backgroundSprite.setTexture(backgroundTexture);
+
     for (int i = 0; i < 5; ++i) {
         sf::Texture tex;
         std::string p1 = "Project/gema" + std::to_string(i + 1) + ".png";
@@ -55,13 +138,7 @@ int main() {
         else if (tex.loadFromFile(p3)) game.setGemTexture(i, tex);
     }
 
-    sf::Font font;
-    if (font.loadFromFile("C:\\Windows\\Fonts\\times.ttf") ||
-        font.loadFromFile("C:\\Windows\\Fonts\\timesnewroman.ttf") ||
-        font.loadFromFile("C:\\Windows\\Fonts\\arial.ttf") ||
-        font.loadFromFile("resources/times.ttf")) {
-        game.setFont(font);
-    }
+    if (fontOK) game.setFont(font);
 
     game.init();
 
@@ -79,14 +156,18 @@ int main() {
 
         game.update(dt);
 
-        window.clear(sf::Color(20, 20, 20));
+        window.clear();
+        window.draw(backgroundSprite);
         game.draw(window);
         window.display();
 
         if (game.isWin()) {
             int action = showEndPopup("Has ganado", "Has ganado!", font);
             if (action == 0) { window.close(); break; }
-            else { game.restart(); continue; }
+            else {
+                game.restart();
+                continue;
+            }
         }
         else if (game.isLose()) {
             int action = showEndPopup("Has perdido", "Has perdido :(", font);

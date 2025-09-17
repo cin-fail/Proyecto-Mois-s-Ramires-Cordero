@@ -18,8 +18,9 @@ public:
     void setTarget(float nx, float ny, float dur = 0.18f);
     void update(float dt);
     void draw(sf::RenderWindow& w) const;
+    void setPositionImmediate(float nx, float ny);
+    void forceSetType(int t, const sf::Texture* tex);
 
-    // datos públicos (fácil de acceder desde Board/Game)
     int type;
     int gridR, gridC;
     float x, y, tx, ty;

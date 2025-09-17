@@ -4,7 +4,6 @@
 #include <ctime>
 #include <algorithm>
 
-// Run helper
 class Run {
 public:
     Run() { length = 0; horizontal = true; }
@@ -54,7 +53,6 @@ void Game::loadGemTextures() {
                 break;
             }
         }
-        if (!texLoaded[i]) std::cout << "No texture for gem " << i << ", using color fallback\n";
     }
 }
 
@@ -62,7 +60,6 @@ void Game::init() {
     board.clear();
     loadGemTextures();
     fillNoInitialMatches();
-    // build gems visuals
     for (int r = 0; r < ROWS_LOCAL; ++r) for (int c = 0; c < COLS_LOCAL; ++c) {
         int t = board.get(r, c);
         auto p = Board::cellCenter(r, c);
@@ -80,10 +77,26 @@ void Game::init() {
         }
     }
     score = 0;
-    movesLeft = 40;
-    target = 10000;
+    movesLeft = 20;
+    target = 5000;
     selected = false; selR = selC = -1;
     animating = false; swapPhase = 0;
+}
+
+void Game::syncGemsWithBoardImmediate() {
+    for (int r = 0; r < ROWS_LOCAL; ++r) {
+        for (int c = 0; c < COLS_LOCAL; ++c) {
+            int t = board.get(r, c);
+            if (t >= 0 && t < GEM_TYPES_LOCAL && texLoaded[t]) {
+                gems[r][c].forceSetType(t, &gemTextures[t]);
+            }
+            else {
+                gems[r][c].forceSetType(t, nullptr);
+            }
+            auto p = Board::cellCenter(r, c);
+            gems[r][c].setPositionImmediate(p.x, p.y);
+        }
+    }
 }
 
 void Game::startNewGame(int moves, int targetScore) {
@@ -121,11 +134,25 @@ void Game::update(float dt) {
         findRunsInternal(h, hC, v, vC);
         if (hC == 0 && vC == 0) {
             int ar = pendingA_r, ac = pendingA_c, br = pendingB_r, bc = pendingB_c;
-            int tA = board.get(ar, ac), tB = board.get(br, bc);
-            board.set(ar, ac, tB); board.set(br, bc, tA);
-            auto pa = Board::cellCenter(ar, ac), pb = Board::cellCenter(br, bc);
+            int tA = board.get(ar, ac);
+            int tB = board.get(br, bc);
+            board.set(ar, ac, tB);
+            board.set(br, bc, tA);
+            int curA_type = board.get(ar, ac);
+            int curB_type = board.get(br, bc);
+            if (curA_type >= 0 && curA_type < GEM_TYPES_LOCAL && texLoaded[curA_type])
+                gems[ar][ac].forceSetType(curA_type, &gemTextures[curA_type]);
+            else gems[ar][ac].forceSetType(curA_type, nullptr);
+
+            if (curB_type >= 0 && curB_type < GEM_TYPES_LOCAL && texLoaded[curB_type])
+                gems[br][bc].forceSetType(curB_type, &gemTextures[curB_type]);
+            else gems[br][bc].forceSetType(curB_type, nullptr);
+
+            auto pa = Board::cellCenter(ar, ac);
+            auto pb = Board::cellCenter(br, bc);
             gems[ar][ac].setTarget(pb.x, pb.y, 0.12f);
             gems[br][bc].setTarget(pa.x, pa.y, 0.12f);
+
             animating = true; swapPhase = 2;
         }
         else {
@@ -137,23 +164,29 @@ void Game::update(float dt) {
         return;
     }
 
+
     if (swapPhase == 2) {
         swapPhase = 0;
         animating = false;
         pendingA_r = pendingA_c = pendingB_r = pendingB_c = -1;
+        syncGemsWithBoardImmediate();
         return;
     }
 
     if (!animating && swapPhase == 0) {
-        Run h[ROWS_LOCAL * COLS_LOCAL]; Run v[ROWS_LOCAL * COLS_LOCAL]; int hC = 0, vC = 0;
-        findRunsInternal(h, hC, v, vC);
-        if (hC > 0 || vC > 0) processMatchesAndCascade();
-        else animating = false;
+        Run htmp[ROWS_LOCAL * COLS_LOCAL]; Run vtmp[ROWS_LOCAL * COLS_LOCAL]; int hC = 0, vC = 0;
+        findRunsInternal(htmp, hC, vtmp, vC);
+        if (hC > 0 || vC > 0) {
+            processMatchesAndCascade();
+        }
+        else {
+            animating = false;
+            syncGemsWithBoardImmediate();
+        }
     }
 }
 
 void Game::draw(sf::RenderWindow& w) {
-    // draw cells
     for (int r = 0; r < ROWS_LOCAL; ++r) for (int c = 0; c < COLS_LOCAL; ++c) {
         sf::RectangleShape cell(sf::Vector2f(CELL_SIZE_LOCAL - 6.f, CELL_SIZE_LOCAL - 6.f));
         cell.setPosition(40.f + c * CELL_SIZE_LOCAL + 3.f, 40.f + r * CELL_SIZE_LOCAL + 3.f);
@@ -162,7 +195,6 @@ void Game::draw(sf::RenderWindow& w) {
         cell.setOutlineColor(sf::Color(60, 60, 60));
         w.draw(cell);
     }
-    // gems
     for (int r = 0; r < ROWS_LOCAL; ++r) for (int c = 0; c < COLS_LOCAL; ++c) {
         if (selected && selR == r && selC == c) {
             sf::CircleShape outline(CELL_SIZE_LOCAL * 0.4f + 6.f);
@@ -175,7 +207,6 @@ void Game::draw(sf::RenderWindow& w) {
         }
         gems[r][c].draw(w);
     }
-    // UI text
     if (fontLoaded) {
         sf::Text info;
         info.setFont(font);
@@ -220,11 +251,33 @@ bool Game::areAdjacent(int r1, int c1, int r2, int c2) const {
 }
 
 void Game::attemptSwap(int ar, int ac, int br, int bc) {
-    int ta = board.get(ar, ac), tb = board.get(br, bc);
-    board.set(ar, ac, tb); board.set(br, bc, ta);
-    auto pa = Board::cellCenter(ar, ac), pb = Board::cellCenter(br, bc);
+    int ta = board.get(ar, ac);
+    int tb = board.get(br, bc);
+    board.set(ar, ac, tb);
+    board.set(br, bc, ta);
+
+    int newA_type = board.get(ar, ac);
+    int newB_type = board.get(br, bc);
+
+    if (newA_type >= 0 && newA_type < GEM_TYPES_LOCAL && texLoaded[newA_type]) {
+        gems[ar][ac].forceSetType(newA_type, &gemTextures[newA_type]);
+    }
+    else {
+        gems[ar][ac].forceSetType(newA_type, nullptr);
+    }
+
+    if (newB_type >= 0 && newB_type < GEM_TYPES_LOCAL && texLoaded[newB_type]) {
+        gems[br][bc].forceSetType(newB_type, &gemTextures[newB_type]);
+    }
+    else {
+        gems[br][bc].forceSetType(newB_type, nullptr);
+    }
+
+    auto pa = Board::cellCenter(ar, ac);
+    auto pb = Board::cellCenter(br, bc);
     gems[ar][ac].setTarget(pb.x, pb.y);
     gems[br][bc].setTarget(pa.x, pa.y);
+
     pendingA_r = ar; pendingA_c = ac; pendingB_r = br; pendingB_c = bc;
     animating = true; swapPhase = 1;
     selected = false; selR = selC = -1;
@@ -232,7 +285,7 @@ void Game::attemptSwap(int ar, int ac, int br, int bc) {
 
 void Game::findRunsInternal(Run horiz[], int& hCount, Run vert[], int& vCount) {
     hCount = 0; vCount = 0;
-    // horizontal
+
     for (int r = 0; r < ROWS_LOCAL; ++r) {
         int c = 0;
         while (c < COLS_LOCAL) {
@@ -250,7 +303,6 @@ void Game::findRunsInternal(Run horiz[], int& hCount, Run vert[], int& vCount) {
             c = end + 1;
         }
     }
-    // vertical
     for (int c = 0; c < COLS_LOCAL; ++c) {
         int r = 0;
         while (r < ROWS_LOCAL) {
@@ -306,7 +358,6 @@ void Game::processMatchesAndCascade() {
         }
     }
 
-    // detect L intersections
     bool horizCounted[ROWS_LOCAL * COLS_LOCAL] = { 0 }, vertCounted[ROWS_LOCAL * COLS_LOCAL] = { 0 };
     for (int hi = 0; hi < hCount; ++hi) {
         for (int vi = 0; vi < vCount; ++vi) {
@@ -326,7 +377,6 @@ void Game::processMatchesAndCascade() {
 
     score += totalScoreAdd;
 
-    // gravity & refill
     for (int c = 0; c < COLS_LOCAL; ++c) {
         int write = ROWS_LOCAL - 1;
         for (int r = ROWS_LOCAL - 1; r >= 0; --r) {
@@ -338,7 +388,6 @@ void Game::processMatchesAndCascade() {
         for (int r = write; r >= 0; --r) board.set(r, c, rand() % GEM_TYPES_LOCAL);
     }
 
-    // animate falling & set textures/colors
     for (int r = 0; r < ROWS_LOCAL; ++r) for (int c = 0; c < COLS_LOCAL; ++c) {
         int t = board.get(r, c);
         gems[r][c].type = t;
@@ -370,11 +419,22 @@ void Game::fillNoInitialMatches() {
 bool Game::createsMatchAt(int r, int c) {
     int t = board.get(r, c);
     if (t < 0) return false;
-    int cL = c - 1; int countL = 0; while (cL >= 0 && board.get(r, cL) == t) { ++countL; --cL; }
-    int cR = c + 1; int countR = 0; while (cR < COLS_LOCAL && board.get(r, cR) == t) { ++countR; ++cR; }
-    if (countL + 1 + countR >= 3) return true;
-    int rU = r - 1; int countU = 0; while (rU >= 0 && board.get(rU, c) == t) { ++countU; --rU; }
-    int rD = r + 1; int countD = 0; while (rD < ROWS_LOCAL && board.get(rD, c) == t) { ++countD; ++rD; }
+    int cL = c - 1, countL = 0, cR = c + 1, countR = 0, rU = r - 1, countU = 0, rD = r + 1, countD = 0;
+    while (cL >= 0 && board.get(r, cL) == t) {
+        ++countL; --cL; 
+    }
+    while (cR < COLS_LOCAL && board.get(r, cR) == t) {
+        ++countR; ++cR; 
+    }
+    if (countL + 1 + countR >= 3) {
+        return true;
+    }
+    while (rU >= 0 && board.get(rU, c) == t) { 
+        ++countU; --rU; 
+    }
+    while (rD < ROWS_LOCAL && board.get(rD, c) == t) { 
+        ++countD; ++rD; 
+    }
     if (countU + 1 + countD >= 3) return true;
     return false;
 }
