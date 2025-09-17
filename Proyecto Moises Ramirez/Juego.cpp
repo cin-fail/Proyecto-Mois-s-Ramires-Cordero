@@ -73,7 +73,7 @@ void Game::init() {
         else {
             gems[r][c].clearTexture();
             gems[r][c].circle.setPosition(p);
-            gems[r][c].updateColor();
+            gems[r][c].updateImage();
         }
     }
     score = 0;
@@ -391,7 +391,7 @@ void Game::processMatchesAndCascade() {
     for (int r = 0; r < ROWS_LOCAL; ++r) for (int c = 0; c < COLS_LOCAL; ++c) {
         int t = board.get(r, c);
         gems[r][c].type = t;
-        gems[r][c].updateColor();
+        gems[r][c].updateImage();
         auto p = Board::cellCenter(r, c);
         gems[r][c].setTarget(p.x, p.y, 0.18f);
         if (t >= 0 && t < GEM_TYPES_LOCAL && texLoaded[t]) gems[r][c].setTexture(gemTextures[t]);

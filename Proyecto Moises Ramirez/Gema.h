@@ -14,7 +14,7 @@ public:
     void init(int t, int r, int c);
     void setTexture(const sf::Texture& tex);
     void clearTexture();
-    void updateColor();
+    void updateImage();
     void setTarget(float nx, float ny, float dur = 0.18f);
     void update(float dt);
     void draw(sf::RenderWindow& w) const;

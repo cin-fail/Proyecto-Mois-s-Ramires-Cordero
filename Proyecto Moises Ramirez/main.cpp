@@ -45,13 +45,11 @@ int main() {
     window.setFramerateLimit(60);
 
     sf::Font font;
-    bool fontOK = false;
-    if (font.loadFromFile("C:\\Windows\\Fonts\\times.ttf")) fontOK = true;
+    font.loadFromFile("C:\\Windows\\Fonts\\times.ttf");
 
     Button bStart, bExit;
     bStart.setPosition(320.f, 240.f);
     bExit.setPosition(320.f, 320.f);
-    if (fontOK) {
         bStart.setFillColor(sf::Color(50, 80, 120, 100));
         bStart.setTextColor(sf::Color(230, 230, 230));
         bStart.setText("Iniciar juego", font, 20);
@@ -59,9 +57,9 @@ int main() {
         bExit.setFillColor(sf::Color(180, 140, 80, 180));
         bExit.setTextColor(sf::Color(255, 255, 220));
         bExit.setText("Salir", font, 20);
-    }
 
     bool startPressed = false;
+  
     while (window.isOpen() && !startPressed) {
         sf::Event e;
         while (window.pollEvent(e)) {
@@ -88,21 +86,19 @@ int main() {
         spriteFondo.setTexture(fondo1);
         window.draw(spriteFondo);
 
-        if (fontOK) {
-            sf::Text title("Horror Match-3", font, 40);
-            title.setFillColor(sf::Color::White);
-            sf::FloatRect tb = title.getLocalBounds();
-            title.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
-            title.setPosition(400.f, 120.f);
-            window.draw(title);
+        sf::Text title("Horror Match-3", font, 40);
+        title.setFillColor(sf::Color::White);
+        sf::FloatRect tb = title.getLocalBounds();
+        title.setOrigin(tb.left + tb.width / 2.f, tb.top + tb.height / 2.f);
+        title.setPosition(400.f, 120.f);
+        window.draw(title);
 
-            sf::Text subtitle("Un juego con temática de terror.", font, 19);
-            subtitle.setFillColor(sf::Color(200, 200, 200));
-            sf::FloatRect sb = subtitle.getLocalBounds();
-            subtitle.setOrigin(sb.left + sb.width / 2.f, sb.top + sb.height / 2.f);
-            subtitle.setPosition(400.f, 170.f);
-            window.draw(subtitle);
-        }
+        sf::Text subtitle("Un juego con temática de terror.", font, 19);
+        subtitle.setFillColor(sf::Color(200, 200, 200));
+        sf::FloatRect sb = subtitle.getLocalBounds();
+        subtitle.setOrigin(sb.left + sb.width / 2.f, sb.top + sb.height / 2.f);
+        subtitle.setPosition(400.f, 170.f);
+        window.draw(subtitle);
         bStart.draw(window);
         bExit.draw(window);
         window.display();
@@ -118,18 +114,12 @@ int main() {
     sf::Sprite backgroundSprite;
     backgroundSprite.setTexture(backgroundTexture);
 
-    for (int i = 0; i < 5; ++i) {
-        sf::Texture tex;
-        std::string p1 = "Project/gema" + std::to_string(i + 1) + ".png";
-        std::string p2 = "Project/gem" + std::to_string(i + 1) + ".png";
-        std::string p3 = "resources/gema" + std::to_string(i + 1) + ".png";
-        if (tex.loadFromFile(p1)) game.setGemTexture(i, tex);
-        else if (tex.loadFromFile(p2)) game.setGemTexture(i, tex);
-        else if (tex.loadFromFile(p3)) game.setGemTexture(i, tex);
-    }
-
-    if (fontOK) game.setFont(font);
-
+    sf::Texture tex;
+    std::string p1 = "Project/gema" + std::to_string(1) + ".png";
+    tex.loadFromFile(p1);
+    game.setGemTexture(1, tex);
+    
+    game.setFont(font);
     game.init();
 
     sf::Clock clock;

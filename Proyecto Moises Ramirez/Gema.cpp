@@ -5,17 +5,13 @@ static float lerp_f(float a, float b, float t) { return a + (b - a) * t; }
 
 Gem::Gem()
     : type(-1), gridR(0), gridC(0), x(0), y(0), tx(0), ty(0),
-    moving(false), animTime(0.f), animDuration(0.18f), hasTexture(false)
-{
-    circle.setRadius(CELL_SIZE_LOCAL * 0.4f);
-    circle.setOrigin(circle.getRadius(), circle.getRadius());
-}
+    moving(false), animTime(0.f), animDuration(0.18f), hasTexture(false){ }
 
 void Gem::init(int t, int r, int c) {
     type = t; gridR = r; gridC = c;
     x = tx = 0.f; y = ty = 0.f;
     moving = false; animTime = 0.f;
-    updateColor();
+    updateImage();
     if (hasTexture) sprite.setPosition(x, y);
 }
 
@@ -34,7 +30,7 @@ void Gem::clearTexture() {
     hasTexture = false;
 }
 
-void Gem::updateColor() {
+void Gem::updateImage() {
     sf::Texture GEMA1;
     sf::Texture GEMA2;
     sf::Texture GEMA3;
@@ -66,7 +62,7 @@ void Gem::forceSetType(int t, const sf::Texture* tex) {
     }
     else {
         clearTexture();
-        updateColor();
+        updateImage();
     }
 }
 
@@ -86,6 +82,6 @@ void Gem::update(float dt) {
 }
 
 void Gem::draw(sf::RenderWindow& w) const {
-    if (hasTexture) w.draw(sprite);
-    else w.draw(circle);
+    hasTexture== true;  
+    w.draw(sprite);
 }
